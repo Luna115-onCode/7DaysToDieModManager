@@ -1,26 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="MainUI">
-  <grid id="27dc6" binding="pane" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="pane" layout-manager="GridLayoutManager" row-count="8" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
-      <xy x="20" y="20" width="464" height="294"/>
+      <xy x="20" y="20" width="686" height="295"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
       <component id="f19c5" class="javax.swing.JTextField" binding="pathField">
         <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+          <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
           </grid>
         </constraints>
         <properties/>
       </component>
-      <vspacer id="cc377">
-        <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
-        </constraints>
-      </vspacer>
       <component id="dfcf7" class="javax.swing.JLabel" binding="pathLabel">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -29,9 +24,66 @@
           <text resource-bundle="EnglishLabels" key="pathLocationLabel"/>
         </properties>
       </component>
+      <component id="2c5ed" class="javax.swing.JList" binding="modsList">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="50"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-6579301"/>
+          <foreground color="-16777216"/>
+          <model/>
+          <selectionMode value="1"/>
+          <toolTipText resource-bundle="EnglishLabels" key="modsLabel"/>
+        </properties>
+      </component>
+      <component id="e0699" class="javax.swing.JLabel" binding="modsLabel">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text resource-bundle="EnglishLabels" key="modsLabel"/>
+        </properties>
+      </component>
+      <component id="54a0e" class="javax.swing.JList" binding="installedModsList">
+        <constraints>
+          <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="50"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-6579301"/>
+          <foreground color="-16777216"/>
+          <selectionMode value="1"/>
+          <toolTipText resource-bundle="EnglishLabels" key="installedModsLabel"/>
+        </properties>
+      </component>
+      <component id="5ca08" class="javax.swing.JLabel" binding="installedModsLabel">
+        <constraints>
+          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text resource-bundle="EnglishLabels" key="installedModsLabel"/>
+        </properties>
+      </component>
+      <component id="5d711" class="javax.swing.JTextPane" binding="modDetailsLabel">
+        <constraints>
+          <grid row="3" column="3" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="10"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-6579301"/>
+          <editable value="false"/>
+          <enabled value="true"/>
+          <foreground color="-16777216"/>
+          <text value="Test"/>
+        </properties>
+      </component>
       <component id="67810" class="javax.swing.JButton" binding="chgLangButton">
         <constraints>
-          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text resource-bundle="EnglishLabels" key="changeLangButton"/>
@@ -39,10 +91,60 @@
       </component>
       <component id="915f1" class="javax.swing.JButton" binding="selectPathButton">
         <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text resource-bundle="EnglishLabels" key="selectButton"/>
+        </properties>
+      </component>
+      <hspacer id="2cec5">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="5" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </hspacer>
+      <vspacer id="f0fa1">
+        <constraints>
+          <grid row="7" column="4" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </vspacer>
+      <component id="42b" class="javax.swing.JButton" binding="addButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text resource-bundle="EnglishLabels" key="addButton"/>
+        </properties>
+      </component>
+      <component id="a6091" class="javax.swing.JButton" binding="deleteButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text resource-bundle="EnglishLabels" key="deleteButton"/>
+        </properties>
+      </component>
+      <component id="7d6da" class="javax.swing.JButton" binding="detailsButton" default-binding="true">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text resource-bundle="EnglishLabels" key="detailsButton"/>
+        </properties>
+      </component>
+      <component id="ffcc4" class="javax.swing.JButton" binding="removeButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text resource-bundle="EnglishLabels" key="removeButton"/>
+        </properties>
+      </component>
+      <component id="80182" class="javax.swing.JButton" binding="applyButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text resource-bundle="EnglishLabels" key="applyButton"/>
         </properties>
       </component>
     </children>

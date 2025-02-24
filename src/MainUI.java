@@ -14,15 +14,26 @@ public class MainUI extends JFrame {
     private JButton chgLangButton;
     private JLabel pathLabel;
     private JButton selectPathButton;
+    private JList<String> modsList;
+    private JLabel modsLabel;
+    private JList installedModsList;
+    private JLabel installedModsLabel;
+    private JTextPane modDetailsLabel;
+    private JButton addButton;
+    private JButton deleteButton;
+    private JButton detailsButton;
+    private JButton removeButton;
+    private JButton applyButton;
     private String lang;
     private String execLocation = System.getProperty("user.dir");
     private Image icon = ImageIO.read(Objects.requireNonNull(MainUI.class.getResourceAsStream("/img/icon.png")));
+    private Methods methods = new Methods();
 
     public MainUI(String title) throws IOException {
         super(title);
         setContentPane(pane);
+        methods.initializeModsList(modsList);
         initConfig();
-        initLang();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(600, 600);
         setResizable(false);
@@ -39,7 +50,8 @@ public class MainUI extends JFrame {
                     lang = "Spanish";
                 }
                 try {
-                    setProperties(Paths.get(execLocation, "config.properties").toString(), "lang", lang);
+                    methods.setProperties(Paths.get(execLocation, "config.properties").toString(), "lang", lang);
+                    initConfig();
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -49,7 +61,8 @@ public class MainUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    setProperties(Paths.get(execLocation, "config.properties").toString(), "gamePath", pickFolder());
+                    methods.setProperties(Paths.get(execLocation, "config.properties").toString(), "gamePath", methods.pickFolder());
+                    initConfig();
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -57,45 +70,25 @@ public class MainUI extends JFrame {
         });
     }
 
-    public Properties getProperties(String file) throws IOException {
-        Properties prop = new Properties();
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        InputStream stream = loader.getResourceAsStream(file);
-        try {
-            prop.load(stream);
-        } catch (java.lang.NullPointerException e) {
-            try {
-                stream = new FileInputStream(file);
-                prop.load(stream);
-            } catch (FileNotFoundException ex) {
-                prop = null;
-            }
-        } catch (IOException e) {
-            prop = null;
-        }
-        return prop;
-    }
-
-    public void setProperties(String file, String property, String value) throws IOException {
-        Properties prop = getProperties(file);
-        prop.setProperty(property, value);
-        try (FileOutputStream output = new FileOutputStream(file)) {
-            prop.store(output, "Config saved");
-        }
-        initConfig();
-        initLang();
-    }
-
     public void initLang() throws IOException {
-        Properties langText = getProperties("%sLabels.properties".formatted(lang));
+        Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
         pathLabel.setText(langText.getProperty("pathLocationLabel"));
         chgLangButton.setText(langText.getProperty("changeLangButton"));
         selectPathButton.setText(langText.getProperty("selectButton"));
+        modsLabel.setText(langText.getProperty("modsLabel"));
+        modsList.setToolTipText(langText.getProperty("modsLabel"));
+        installedModsLabel.setText(langText.getProperty("installedModsLabel"));
+        installedModsList.setToolTipText(langText.getProperty("installedModsLabel"));
+        addButton.setText(langText.getProperty("addButton"));
+        removeButton.setText(langText.getProperty("removeButton"));
+        detailsButton.setText(langText.getProperty("detailsButton"));
+        deleteButton.setText(langText.getProperty("deleteButton"));
+        applyButton.setText(langText.getProperty("applyButton"));
     }
 
     public void initConfig() throws IOException {
         String filename = Paths.get(execLocation, "config.properties").toString();
-        Properties config = getProperties(filename);
+        Properties config = methods.getProperties(filename);
 
         if (config == null) {
             config = new Properties();
@@ -109,20 +102,7 @@ public class MainUI extends JFrame {
 
         pathField.setText(config.getProperty("gamePath"));
         lang = config.getProperty("lang");
-    }
-
-    public static String pickFolder() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); // Only allow directories
-        chooser.setDialogTitle("Select a Folder");
-
-        int result = chooser.showOpenDialog(null); // Open dialog
-
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFolder = chooser.getSelectedFile();
-            return selectedFolder.getAbsolutePath(); // Return folder path
-        }
-        return null; // No selection
+        initLang();
     }
 
     public static void main(String[] args) throws IOException {
