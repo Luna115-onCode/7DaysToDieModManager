@@ -13,7 +13,7 @@ import java.util.Properties;
 public class Methods {
     private String execLocation = System.getProperty("user.dir");
     private Properties config = getProperties(Paths.get(execLocation, "config.properties").toString());
-    private String lang = config.getProperty("lang");
+    private String lang = config == null ? "English" : config.getProperty("lang");
 
     public Methods() throws IOException {
     }
