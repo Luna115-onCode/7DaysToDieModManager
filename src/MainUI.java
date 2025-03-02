@@ -18,9 +18,10 @@ public class MainUI extends JFrame {
     private JList<String> modsList, installedModsList;
     private JTextPane modDetailsContainer;
     private JScrollPane installedModsListScroll, modsListScroll;
-    private String lang, execLocation = System.getProperty("user.dir");
+    private String lang = "English", execLocation = System.getProperty("user.dir");
     private Image icon = ImageIO.read(Objects.requireNonNull(MainUI.class.getResourceAsStream("/img/icon.png")));
     private Methods methods = new Methods();
+    private Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
 
     public MainUI(String title) throws IOException {
         super(title);
@@ -71,7 +72,7 @@ public class MainUI extends JFrame {
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
                     String[] selection = modsList.getSelectedValuesList().toArray(new String[0]);
-                    if (selection.length > 0) {
+                    if (selection.length > 0 && !Objects.equals(selection[0], langText.getProperty("NoModsAvailable"))) {
                         addButton.setEnabled(true);
                         deleteButton.setEnabled(true);
                         detailsButton.setEnabled(selection.length == 1);
@@ -134,12 +135,17 @@ public class MainUI extends JFrame {
         String classpath = System.getProperty("java.class.path");
         String mainClass = getClass().getName();
 
-        ProcessBuilder builderJar = new ProcessBuilder(java, "-jar", currentJar);
-        ProcessBuilder builderClass = new ProcessBuilder(java, "-cp", classpath, mainClass);
-        builderJar.start();
-        builderClass.start();
+        if (currentJar.endsWith(".jar")) {
+            ProcessBuilder builderJar = new ProcessBuilder(java, "-jar", currentJar);
+            builderJar.start();
+        } else {
+            ProcessBuilder builderClass = new ProcessBuilder(java, "-cp", classpath, mainClass);
+            builderClass.start();
+        }
+
         System.exit(0);
     }
+
 
 
     public static void main(String[] args) throws IOException {
