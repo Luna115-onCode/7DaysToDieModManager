@@ -1,9 +1,11 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Properties;
@@ -11,21 +13,12 @@ import java.util.Properties;
 public class MainUI extends JFrame {
     private JPanel pane;
     private JTextField pathField;
-    private JButton chgLangButton;
-    private JLabel pathLabel;
-    private JButton selectPathButton;
-    private JList<String> modsList;
-    private JLabel modsLabel;
-    private JList installedModsList;
-    private JLabel installedModsLabel;
-    private JTextPane modDetailsLabel;
-    private JButton addButton;
-    private JButton deleteButton;
-    private JButton detailsButton;
-    private JButton removeButton;
-    private JButton applyButton;
-    private String lang;
-    private String execLocation = System.getProperty("user.dir");
+    private JButton chgLangButton, selectPathButton, addButton, deleteButton, detailsButton, removeButton, applyButton;
+    private JLabel pathLabel, modsLabel, installedModsLabel, modDetailsLabel;
+    private JList<String> modsList, installedModsList;
+    private JTextPane modDetailsContainer;
+    private JScrollPane installedModsListScroll, modsListScroll;
+    private String lang, execLocation = System.getProperty("user.dir");
     private Image icon = ImageIO.read(Objects.requireNonNull(MainUI.class.getResourceAsStream("/img/icon.png")));
     private Methods methods = new Methods();
 
@@ -35,11 +28,15 @@ public class MainUI extends JFrame {
         methods.initializeModsList(modsList);
         initConfig();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 600);
+        setSize(730, 630);
         setResizable(false);
         setVisible(true);
         setLocationRelativeTo(null);
         setIconImage(icon);
+        modsList.setVisibleRowCount(5);
+        modsListScroll.setViewportView(modsList);
+        installedModsList.setVisibleRowCount(5);
+        installedModsListScroll.setViewportView(installedModsList);
 
         chgLangButton.addActionListener(new ActionListener() {
             @Override
@@ -52,7 +49,8 @@ public class MainUI extends JFrame {
                 try {
                     methods.setProperties(Paths.get(execLocation, "config.properties").toString(), "lang", lang);
                     initConfig();
-                } catch (IOException ex) {
+                    restartApplication();
+                } catch (IOException | URISyntaxException ex) {
                     throw new RuntimeException(ex);
                 }
             }
@@ -68,6 +66,31 @@ public class MainUI extends JFrame {
                 }
             }
         });
+        modsList.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    String[] selection = modsList.getSelectedValuesList().toArray(new String[0]);
+                    if (selection.length > 0) {
+                        addButton.setEnabled(true);
+                        deleteButton.setEnabled(true);
+                        detailsButton.setEnabled(selection.length == 1);
+                    } else {
+                        addButton.setEnabled(false);
+                        deleteButton.setEnabled(false);
+                        detailsButton.setEnabled(false);
+                    }
+                }
+            }
+        });
+
+        pane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                modsList.clearSelection();
+            }
+        });
+
     }
 
     public void initLang() throws IOException {
@@ -83,7 +106,7 @@ public class MainUI extends JFrame {
         removeButton.setText(langText.getProperty("removeButton"));
         detailsButton.setText(langText.getProperty("detailsButton"));
         deleteButton.setText(langText.getProperty("deleteButton"));
-        applyButton.setText(langText.getProperty("applyButton"));
+        modDetailsLabel.setText(langText.getProperty("modDetailsLabel"));
     }
 
     public void initConfig() throws IOException {
@@ -104,6 +127,20 @@ public class MainUI extends JFrame {
         lang = config.getProperty("lang");
         initLang();
     }
+
+    private void restartApplication() throws IOException, URISyntaxException {
+        String java = System.getProperty("java.home") + "/bin/java";
+        String currentJar = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+        String classpath = System.getProperty("java.class.path");
+        String mainClass = getClass().getName();
+
+        ProcessBuilder builderJar = new ProcessBuilder(java, "-jar", currentJar);
+        ProcessBuilder builderClass = new ProcessBuilder(java, "-cp", classpath, mainClass);
+        builderJar.start();
+        builderClass.start();
+        System.exit(0);
+    }
+
 
     public static void main(String[] args) throws IOException {
         JFrame panel = new MainUI("7 Days to die Mod Manager");

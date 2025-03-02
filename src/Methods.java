@@ -1,16 +1,22 @@
-import javax.imageio.ImageIO;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.Collections;
 import java.util.Properties;
 
 public class Methods {
     private String execLocation = System.getProperty("user.dir");
+    private Properties config = getProperties(Paths.get(execLocation, "config.properties").toString());
+    private String lang = config.getProperty("lang");
+
+    public Methods() throws IOException {
+    }
 
     public Properties getProperties(String file) throws IOException {
         Properties prop = new Properties();
@@ -53,7 +59,7 @@ public class Methods {
         return null;
     }
 
-    public void initializeModsList(JList list) {
+    public void initializeModsList(JList list) throws IOException {
         DefaultListModel<String> model = (DefaultListModel<String>) list.getModel();
 
         for (String item : getMods()) {
@@ -61,7 +67,7 @@ public class Methods {
         }
     }
 
-    public ArrayList<String> getMods() {
+    public ArrayList<String> getMods() throws IOException {
         ArrayList<String> modsListFolder = new ArrayList<>();
         File folder = new File(Paths.get(execLocation, "Mods").toString());
 
@@ -69,14 +75,48 @@ public class Methods {
             File[] files = folder.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    if (file.isDirectory()) {
-                        modsListFolder.add(file.getName());
+                    Document modInfo = readXML(Paths.get(String.valueOf(file), "modinfo.xml").toString());
+                    String name = getXMLElement("DisplayName", modInfo);
+                    if (file.isDirectory() && name != null) {
+                        modsListFolder.add(name);
                     }
                 }
             }
         } else {
             folder.mkdir();
         }
+        if (modsListFolder.isEmpty()) {
+            modsListFolder.add(getProperties("%sLabels.properties".formatted(lang)).getProperty("NoModsAvailable"));
+        }
+        Collections.sort(modsListFolder);
         return modsListFolder;
+    }
+
+    public Document readXML(String filename) {
+        Document doc = null;
+        try {
+            File xmlFile = new File(filename);
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            doc = builder.parse(xmlFile);
+            doc.getDocumentElement().normalize();
+        } catch (Exception ignored) {}
+        return doc;
+    }
+
+    public String getXMLElement(String element, Document doc) {
+        return getXMLElement(element, doc, "value");
+    }
+
+    public String getXMLElement(String element, Document doc, String field) {
+        String value = null;
+        if (doc != null) {
+            NodeList nodes = doc.getElementsByTagName(element);
+            if (nodes.getLength() > 0) {
+                Element object = (Element) nodes.item(0);
+                value = object.getAttribute(field);
+            }
+        }
+        return value;
     }
 }
