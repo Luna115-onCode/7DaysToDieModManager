@@ -6,14 +6,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Properties;
+import java.util.*;
 
 public class Methods {
-    private String execLocation = System.getProperty("user.dir");
-    private Properties config = getProperties(Paths.get(execLocation, "config.properties").toString());
-    private String lang = config == null ? "English" : config.getProperty("lang");
+    private final String execLocation = System.getProperty("user.dir");
+    private final Properties config = getProperties(Paths.get(execLocation, "config.properties").toString());
+    private final String lang = config == null ? "English" : config.getProperty("lang");
+    private final Properties langText = getProperties("%sLabels.properties".formatted(lang));
 
     public Methods() throws IOException {
     }
@@ -60,10 +59,24 @@ public class Methods {
     }
 
     public void initializeModsList(JList list) throws IOException {
+        list.setModel(new DefaultListModel<String>());
         DefaultListModel<String> model = (DefaultListModel<String>) list.getModel();
 
         for (String item : getMods()) {
             model.addElement(item);
+        }
+
+    }
+
+    public void initializeInstalledModsList(JList list) throws IOException {
+        list.setModel(new DefaultListModel<String>());
+        DefaultListModel<String> model = (DefaultListModel<String>) list.getModel();
+        String[] installedMods = config.getProperty("mods").split("&;");
+        for (String item : installedMods) {
+            model.addElement(item);
+        }
+        if (model.getSize() <= 1) {
+            model.addElement(langText.getProperty("noModsInstalled"));
         }
     }
 
@@ -118,5 +131,50 @@ public class Methods {
             }
         }
         return value;
+    }
+
+    public Document searchModDetails(String modName) {
+        Document doc = null;
+        File folder = new File(Paths.get(execLocation, "Mods").toString());
+        if (folder.exists()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    Document modInfo = readXML(Paths.get(String.valueOf(file), "modinfo.xml").toString());
+                    String name = getXMLElement("DisplayName", modInfo);
+                    if (file.isDirectory() && Objects.equals(name, modName)) {
+                        doc = modInfo;
+                        break;
+                    }
+                }
+            }
+        }
+        return doc;
+    }
+
+    public void setSelectedDetails(String selectedOption, JTextPane container) {
+        Document doc = searchModDetails(selectedOption);
+        String modName = getXMLElement("Name", doc) == null ? "No Name Available" : getXMLElement("Name", doc);
+        String modDisplayName = getXMLElement("DisplayName", doc) == null ? "No Name ID Available" : getXMLElement("DisplayName", doc);
+        String description = getXMLElement("Description", doc) == null ? "No Description Available" : getXMLElement("Description", doc);
+        String version = getXMLElement("Version", doc) == null ? "Version" : getXMLElement("Version", doc);
+        String author = getXMLElement("Author", doc) == null ? "No Author Available" : getXMLElement("Author", doc);
+        container.setText(("""
+                        %s: %s
+                        
+                        %s: %s
+                        
+                        %s: %s
+                        
+                        %s: %s
+                        
+                        %s: %s
+                        """).formatted(langText.getProperty("name"), modDisplayName, langText.getProperty("nameID"),
+                modName, langText.getProperty("description"), description, langText.getProperty("author"), author,
+                langText.getProperty("version"), version));
+    }
+
+    public void clearSelectedDetails(JTextPane container) {
+        container.setText("");
     }
 }

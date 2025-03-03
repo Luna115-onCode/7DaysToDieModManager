@@ -1,3 +1,5 @@
+import org.w3c.dom.Document;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -13,21 +15,26 @@ import java.util.Properties;
 public class MainUI extends JFrame {
     private JPanel pane;
     private JTextField pathField;
-    private JButton chgLangButton, selectPathButton, addButton, deleteButton, detailsButton, removeButton, applyButton;
+    private JButton chgLangButton, selectPathButton, addButton, deleteButton, removeButton, applyButton;
     private JLabel pathLabel, modsLabel, installedModsLabel, modDetailsLabel;
     private JList<String> modsList, installedModsList;
     private JTextPane modDetailsContainer;
     private JScrollPane installedModsListScroll, modsListScroll;
-    private String lang = "English", execLocation = System.getProperty("user.dir");
+    private String lang = "English";
+    private String selectedOption;
     private Image icon = ImageIO.read(Objects.requireNonNull(MainUI.class.getResourceAsStream("/img/icon.png")));
-    private Methods methods = new Methods();
-    private Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
+
+    private final String execLocation = System.getProperty("user.dir");
+    private final Methods methods = new Methods();
+
 
     public MainUI(String title) throws IOException {
         super(title);
         setContentPane(pane);
-        methods.initializeModsList(modsList);
         initConfig();
+        Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
+        methods.initializeModsList(modsList);
+        methods.initializeInstalledModsList(installedModsList);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(730, 630);
         setResizable(false);
@@ -75,12 +82,41 @@ public class MainUI extends JFrame {
                     if (selection.length > 0 && !Objects.equals(selection[0], langText.getProperty("NoModsAvailable"))) {
                         addButton.setEnabled(true);
                         deleteButton.setEnabled(true);
-                        detailsButton.setEnabled(selection.length == 1);
+                        selectedOption = selection[0];
+                        if (selection.length == 1) {
+                            methods.setSelectedDetails(selectedOption, modDetailsContainer);
+                        } else {
+                            methods.clearSelectedDetails(modDetailsContainer);
+                        }
                     } else {
                         addButton.setEnabled(false);
                         deleteButton.setEnabled(false);
-                        detailsButton.setEnabled(false);
+                        methods.clearSelectedDetails(modDetailsContainer);
                     }
+                } else {
+                    installedModsList.clearSelection();
+                }
+            }
+        });
+        installedModsList.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    String[] selection = installedModsList.getSelectedValuesList().toArray(new String[0]);
+                    if (selection.length > 0 && !Objects.equals(selection[0], langText.getProperty("noModsInstalled"))) {
+                        removeButton.setEnabled(true);
+                        selectedOption = selection[0];
+                        if (selection.length == 1) {
+                            methods.setSelectedDetails(selectedOption, modDetailsContainer);
+                        } else {
+                            methods.clearSelectedDetails(modDetailsContainer);
+                        }
+                    } else {
+                        removeButton.setEnabled(false);
+                        methods.clearSelectedDetails(modDetailsContainer);
+                    }
+                } else {
+                    modsList.clearSelection();
                 }
             }
         });
@@ -89,6 +125,7 @@ public class MainUI extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 modsList.clearSelection();
+                installedModsList.clearSelection();
             }
         });
 
@@ -105,7 +142,6 @@ public class MainUI extends JFrame {
         installedModsList.setToolTipText(langText.getProperty("installedModsLabel"));
         addButton.setText(langText.getProperty("addButton"));
         removeButton.setText(langText.getProperty("removeButton"));
-        detailsButton.setText(langText.getProperty("detailsButton"));
         deleteButton.setText(langText.getProperty("deleteButton"));
         modDetailsLabel.setText(langText.getProperty("modDetailsLabel"));
     }
@@ -145,8 +181,6 @@ public class MainUI extends JFrame {
 
         System.exit(0);
     }
-
-
 
     public static void main(String[] args) throws IOException {
         JFrame panel = new MainUI("7 Days to die Mod Manager");
