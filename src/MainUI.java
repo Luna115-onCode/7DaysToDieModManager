@@ -8,7 +8,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -22,6 +25,7 @@ public class MainUI extends JFrame {
     private JScrollPane installedModsListScroll, modsListScroll;
     private String lang = "English";
     private String selectedOption;
+    private String[] selectedOptions;
     private Image icon = ImageIO.read(Objects.requireNonNull(MainUI.class.getResourceAsStream("/img/icon.png")));
 
     private final String execLocation = System.getProperty("user.dir");
@@ -83,6 +87,7 @@ public class MainUI extends JFrame {
                         addButton.setEnabled(true);
                         deleteButton.setEnabled(true);
                         selectedOption = selection[0];
+                        selectedOptions = selection;
                         if (selection.length == 1) {
                             methods.setSelectedDetails(selectedOption, modDetailsContainer);
                         } else {
@@ -106,6 +111,7 @@ public class MainUI extends JFrame {
                     if (selection.length > 0 && !Objects.equals(selection[0], langText.getProperty("noModsInstalled"))) {
                         removeButton.setEnabled(true);
                         selectedOption = selection[0];
+                        selectedOptions = selection;
                         if (selection.length == 1) {
                             methods.setSelectedDetails(selectedOption, modDetailsContainer);
                         } else {
@@ -120,12 +126,45 @@ public class MainUI extends JFrame {
                 }
             }
         });
-
         pane.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 modsList.clearSelection();
                 installedModsList.clearSelection();
+            }
+        });
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int result = JOptionPane.showConfirmDialog(null, langText.getProperty("deleteMsg"), langText.getProperty("confirm"), JOptionPane.YES_NO_OPTION);
+
+                if (result == JOptionPane.YES_OPTION) {
+                    for (String option : selectedOptions) {
+                        Document doc = methods.searchModDetails(option);
+                        String modFolder = URLDecoder.decode(doc.getDocumentURI().replaceFirst("^file:/", "").replaceFirst("/?modinfo\\.xml$", ""), StandardCharsets.UTF_8);
+
+                        try {
+                            Files.walkFileTree(Path.of(modFolder), new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    Files.delete(file);
+                                    return FileVisitResult.CONTINUE;
+                                }
+
+                                @Override
+                                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                    Files.delete(dir);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                            });
+                            methods.initializeModsList(modsList);
+                            methods.initializeInstalledModsList(installedModsList);
+                        } catch (IOException error) {
+                            JOptionPane.showMessageDialog(null, "Failed to delete directory: %s".formatted(error.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+                            System.err.println("Failed to delete directory: " + error.getMessage());
+                        }
+                    }
+                }
             }
         });
 
