@@ -58,31 +58,18 @@ public class Methods {
         return null;
     }
 
-    public void initializeModsList(JList list) throws IOException {
+    public void initializeModsList(JList list, String pathToSearch) throws IOException {
         list.setModel(new DefaultListModel<String>());
         DefaultListModel<String> model = (DefaultListModel<String>) list.getModel();
 
-        for (String item : getMods()) {
+        for (String item : getMods(pathToSearch)) {
             model.addElement(item);
-        }
-
-    }
-
-    public void initializeInstalledModsList(JList list) throws IOException {
-        list.setModel(new DefaultListModel<String>());
-        DefaultListModel<String> model = (DefaultListModel<String>) list.getModel();
-        String[] installedMods = config.getProperty("mods").split("&;");
-        for (String item : installedMods) {
-            model.addElement(item);
-        }
-        if (model.getSize() <= 1) {
-            model.addElement(langText.getProperty("noModsInstalled"));
         }
     }
 
-    public ArrayList<String> getMods() throws IOException {
+    public ArrayList<String> getMods(String pathToSearch) throws IOException {
         ArrayList<String> modsListFolder = new ArrayList<>();
-        File folder = new File(Paths.get(execLocation, "Mods").toString());
+        File folder = new File(Paths.get(pathToSearch, "Mods").toString());
 
         if (folder.exists()) {
             File[] files = folder.listFiles();
@@ -133,9 +120,9 @@ public class Methods {
         return value;
     }
 
-    public Document searchModDetails(String modName) {
+    public Document searchModDetails(String modName, String searchLocation) {
         Document doc = null;
-        File folder = new File(Paths.get(execLocation, "Mods").toString());
+        File folder = new File(Paths.get(searchLocation, "Mods").toString());
         if (folder.exists()) {
             File[] files = folder.listFiles();
             if (files != null) {
@@ -152,8 +139,8 @@ public class Methods {
         return doc;
     }
 
-    public void setSelectedDetails(String selectedOption, JTextPane container) {
-        Document doc = searchModDetails(selectedOption);
+    public void setSelectedDetails(String selectedOption, JTextPane container, String searchLocation) {
+        Document doc = searchModDetails(selectedOption, searchLocation);
         String modName = getXMLElement("Name", doc) == null ? "No Name Available" : getXMLElement("Name", doc);
         String modDisplayName = getXMLElement("DisplayName", doc) == null ? "No Name ID Available" : getXMLElement("DisplayName", doc);
         String description = getXMLElement("Description", doc) == null ? "No Description Available" : getXMLElement("Description", doc);

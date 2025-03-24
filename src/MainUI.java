@@ -12,6 +12,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -37,8 +39,9 @@ public class MainUI extends JFrame {
         setContentPane(pane);
         initConfig();
         Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
-        methods.initializeModsList(modsList);
-        methods.initializeInstalledModsList(installedModsList);
+        Properties config = methods.getProperties(Paths.get(execLocation, "config.properties").toString());
+        methods.initializeModsList(modsList, execLocation);
+        methods.initializeModsList(installedModsList, config.getProperty("gamePath"));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(730, 630);
         setResizable(false);
@@ -89,7 +92,7 @@ public class MainUI extends JFrame {
                         selectedOption = selection[0];
                         selectedOptions = selection;
                         if (selection.length == 1) {
-                            methods.setSelectedDetails(selectedOption, modDetailsContainer);
+                            methods.setSelectedDetails(selectedOption, modDetailsContainer, execLocation);
                         } else {
                             methods.clearSelectedDetails(modDetailsContainer);
                         }
@@ -113,7 +116,7 @@ public class MainUI extends JFrame {
                         selectedOption = selection[0];
                         selectedOptions = selection;
                         if (selection.length == 1) {
-                            methods.setSelectedDetails(selectedOption, modDetailsContainer);
+                            methods.setSelectedDetails(selectedOption, modDetailsContainer, config.getProperty("gamePath"));
                         } else {
                             methods.clearSelectedDetails(modDetailsContainer);
                         }
@@ -136,11 +139,17 @@ public class MainUI extends JFrame {
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int result = JOptionPane.showConfirmDialog(null, langText.getProperty("deleteMsg"), langText.getProperty("confirm"), JOptionPane.YES_NO_OPTION);
+                String formattedSelectedOptions = Arrays.toString(selectedOptions).replace(",", "\n* ").replace("[", "* ").replace("]", "");
+                int result = JOptionPane.showConfirmDialog(null,
+                        ("""
+                        %s
+                        
+                        %s
+                        """).formatted(langText.getProperty("deleteMsg"), formattedSelectedOptions), langText.getProperty("confirm"), JOptionPane.YES_NO_OPTION);
 
                 if (result == JOptionPane.YES_OPTION) {
                     for (String option : selectedOptions) {
-                        Document doc = methods.searchModDetails(option);
+                        Document doc = methods.searchModDetails(option, execLocation);
                         String modFolder = URLDecoder.decode(doc.getDocumentURI().replaceFirst("^file:/", "").replaceFirst("/?modinfo\\.xml$", ""), StandardCharsets.UTF_8);
 
                         try {
@@ -157,17 +166,133 @@ public class MainUI extends JFrame {
                                     return FileVisitResult.CONTINUE;
                                 }
                             });
-                            methods.initializeModsList(modsList);
-                            methods.initializeInstalledModsList(installedModsList);
+                            methods.initializeModsList(modsList, execLocation);
+                            methods.initializeModsList(installedModsList, config.getProperty("gamePath"));
                         } catch (IOException error) {
-                            JOptionPane.showMessageDialog(null, "Failed to delete directory: %s".formatted(error.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
-                            System.err.println("Failed to delete directory: " + error.getMessage());
+                            JOptionPane.showMessageDialog(null, "%s: %s".formatted(langText.getProperty("failedToDeleteDir"), error.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+                            System.err.printf("%s: %s%n", langText.getProperty("failedToDeleteDir"), error.getMessage());
+                        }
+                    }
+                }
+            }
+        });
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String formattedSelectedOptions = Arrays.toString(selectedOptions).replace(",", "\n* ").replace("[", "* ").replace("]", "");
+                int result = JOptionPane.showConfirmDialog(null,
+                        ("""
+                        %s
+                        
+                        %s
+                        """).formatted(langText.getProperty("addMsg"), formattedSelectedOptions), langText.getProperty("confirm"), JOptionPane.YES_NO_OPTION);
+
+                if (result == JOptionPane.YES_OPTION) {
+                    for (String option : selectedOptions) {
+                        Document doc = methods.searchModDetails(option, execLocation);
+                        String modFolder = URLDecoder.decode(doc.getDocumentURI().replaceFirst("^file:/", "").replaceFirst("/?modinfo\\.xml$", ""), StandardCharsets.UTF_8);
+                        Path modFolderPath = Path.of(modFolder);
+                        String modFolderName = modFolderPath.getFileName().toString();
+                        Path gameModFolder = Paths.get(config.getProperty("gamePath"), "Mods", modFolderName);
+
+                        try {
+                            Files.walkFileTree(modFolderPath, new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                                    Path targetDir = gameModFolder.resolve(modFolderPath.relativize(dir));
+                                    if (!Files.exists(targetDir)) {
+                                        Files.createDirectories(targetDir);
+                                    }
+                                    return FileVisitResult.CONTINUE;
+                                }
+
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    Path targetFile = gameModFolder.resolve(modFolderPath.relativize(file));
+                                    Files.copy(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                            });
+
+                            methods.initializeModsList(modsList, execLocation);
+                            methods.initializeModsList(installedModsList, config.getProperty("gamePath"));
+                        } catch (IOException error) {
+                            JOptionPane.showMessageDialog(null, "%s: %s".formatted(langText.getProperty("failedToCopyDir"), error.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+                            System.err.printf("%s: %s%n", langText.getProperty("failedToCopyDir"), error.getMessage());
                         }
                     }
                 }
             }
         });
 
+        removeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String formattedSelectedOptions = Arrays.toString(selectedOptions).replace(",", "\n* ").replace("[", "* ").replace("]", "");
+                int result = JOptionPane.showConfirmDialog(null,
+                        ("""
+                        %s
+                        
+                        %s
+                        """).formatted(langText.getProperty("removeMsg"), formattedSelectedOptions), langText.getProperty("confirm"), JOptionPane.YES_NO_OPTION);
+
+                if (result == JOptionPane.YES_OPTION) {
+                    for (String option : selectedOptions) {
+                        Document doc = methods.searchModDetails(option, config.getProperty("gamePath"));
+                        String modFolder = URLDecoder.decode(doc.getDocumentURI().replaceFirst("^file:/", "").replaceFirst("/?modinfo\\.xml$", ""), StandardCharsets.UTF_8);
+                        boolean isModOnManager = false;
+                        boolean canDelete = true;
+
+                        try {
+                            for (String mod : methods.getMods(execLocation)) {
+                                if (Objects.equals(mod, option)) {
+                                    isModOnManager = true;
+                                    break;
+                                }
+                            }
+                            if (!isModOnManager) {
+                                int deleteAnyway = JOptionPane.showConfirmDialog(null,
+                                        ("""
+                                        %s:
+                                        
+                                        %s
+                                        %s
+                                        %s
+                                        
+                                        %s
+                                        
+                                        * %s
+                                        """).formatted(langText.getProperty("noteMsg"),langText.getProperty("modNotOnManagerWarning1"),langText.getProperty("modNotOnManagerWarning2"),langText.getProperty("modNotOnManagerWarning3"),langText.getProperty("removeMsg"), option),
+                                        langText.getProperty("confirm"), JOptionPane.YES_NO_OPTION);
+                                if (deleteAnyway == JOptionPane.NO_OPTION) {
+                                    canDelete = false;
+                                }
+                            }
+                            if (canDelete) {
+                                Files.walkFileTree(Path.of(modFolder), new SimpleFileVisitor<Path>() {
+                                    @Override
+                                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                        Files.delete(file);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+
+                                    @Override
+                                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                        Files.delete(dir);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+                                });
+                                methods.initializeModsList(modsList, execLocation);
+                                methods.initializeModsList(installedModsList, config.getProperty("gamePath"));
+                            }
+                        } catch (IOException error) {
+                            JOptionPane.showMessageDialog(null, "%s: %s".formatted(langText.getProperty("failedToDeleteDir"), error.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+                            System.err.printf("%s: %s%n", langText.getProperty("failedToDeleteDir"), error.getMessage());
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void initLang() throws IOException {
