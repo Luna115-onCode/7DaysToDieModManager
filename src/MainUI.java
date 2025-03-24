@@ -65,8 +65,13 @@ public class MainUI extends JFrame {
         });
         selectPathButton.addActionListener(e -> {
             try {
-                methods.setProperties(Paths.get(execLocation, "config.properties").toString(), "gamePath", methods.pickFolder());
-                initConfig();
+                String selectedPath = methods.pickFolder();
+                if (selectedPath != null) {
+                    methods.setProperties(Paths.get(execLocation, "config.properties").toString(), "gamePath", selectedPath);
+                    initConfig();
+                    methods.initializeModsList(modsList, execLocation);
+                    methods.initializeModsList(installedModsList, selectedPath);
+                }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
