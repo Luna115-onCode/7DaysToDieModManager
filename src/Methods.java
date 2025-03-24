@@ -22,15 +22,11 @@ public class Methods {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         InputStream stream = loader.getResourceAsStream(file);
         try {
-            prop.load(stream);
-        } catch (java.lang.NullPointerException e) {
-            try {
+            if (stream == null) {
                 stream = new FileInputStream(file);
-                prop.load(stream);
-            } catch (FileNotFoundException ex) {
-                prop = null;
             }
-        } catch (IOException e) {
+            prop.load(stream);
+        } catch (NullPointerException | IOException e) {
             prop = null;
         }
         return prop;
@@ -58,7 +54,7 @@ public class Methods {
         return null;
     }
 
-    public void initializeModsList(JList list, String pathToSearch) throws IOException {
+    public void initializeModsList(JList<String> list, String pathToSearch) throws IOException {
         list.setModel(new DefaultListModel<String>());
         DefaultListModel<String> model = (DefaultListModel<String>) list.getModel();
 
@@ -86,7 +82,7 @@ public class Methods {
             folder.mkdir();
         }
         if (modsListFolder.isEmpty()) {
-            modsListFolder.add(getProperties("%sLabels.properties".formatted(lang)).getProperty("NoModsAvailable"));
+            modsListFolder.add(langText.getProperty("NoModsAvailable"));
         }
         Collections.sort(modsListFolder);
         return modsListFolder;

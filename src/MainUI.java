@@ -216,16 +216,11 @@ public class MainUI extends JFrame {
                 for (String option : selectedOptions) {
                     Document doc = methods.searchModDetails(option, config.getProperty("gamePath"));
                     String modFolder = URLDecoder.decode(doc.getDocumentURI().replaceFirst("^file:/", "").replaceFirst("/?modinfo\\.xml$", ""), StandardCharsets.UTF_8);
-                    boolean isModOnManager = false;
+                    boolean isModOnManager;
                     boolean canDelete = true;
 
                     try {
-                        for (String mod : methods.getMods(execLocation)) {
-                            if (Objects.equals(mod, option)) {
-                                isModOnManager = true;
-                                break;
-                            }
-                        }
+                        isModOnManager = methods.getMods(execLocation).contains(option);
                         if (!isModOnManager) {
                             int deleteAnyway = JOptionPane.showConfirmDialog(null,
                                     ("""
