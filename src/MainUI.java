@@ -28,14 +28,15 @@ public class MainUI extends JFrame {
     private final String execLocation = System.getProperty("user.dir");
     private final Methods methods = new Methods();
 
+    private Properties config = methods.getProperties(Paths.get(execLocation, "config.properties").toString());
+    private Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
+
 
     public MainUI(String title) throws IOException {
         super(title);
         Image icon = ImageIO.read(Objects.requireNonNull(MainUI.class.getResourceAsStream("/img/icon.png")));
         setContentPane(pane);
         initConfig();
-        Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
-        Properties config = methods.getProperties(Paths.get(execLocation, "config.properties").toString());
         methods.initializeModsList(modsList, execLocation);
         methods.initializeModsList(installedModsList, config.getProperty("gamePath"));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -57,7 +58,6 @@ public class MainUI extends JFrame {
             }
             try {
                 methods.setProperties(Paths.get(execLocation, "config.properties").toString(), "lang", lang);
-                initConfig();
                 restartApplication();
             } catch (IOException | URISyntaxException ex) {
                 throw new RuntimeException(ex);
@@ -271,7 +271,7 @@ public class MainUI extends JFrame {
     }
 
     public void initLang() throws IOException {
-        Properties langText = methods.getProperties("%sLabels.properties".formatted(lang));
+        langText = methods.getProperties("%sLabels.properties".formatted(lang));
         pathLabel.setText(langText.getProperty("pathLocationLabel"));
         chgLangButton.setText(langText.getProperty("changeLangButton"));
         selectPathButton.setText(langText.getProperty("selectButton"));
@@ -287,7 +287,7 @@ public class MainUI extends JFrame {
 
     public void initConfig() throws IOException {
         String filename = Paths.get(execLocation, "config.properties").toString();
-        Properties config = methods.getProperties(filename);
+        config = methods.getProperties(filename);
 
         if (config == null) {
             config = new Properties();
